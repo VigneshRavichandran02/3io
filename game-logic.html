@@ -1,5 +1,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script>
+/*********** Configurable Game Constants ***********/
 const Texture = ['solid', 'shaded', 'empty'];
 const Shape = ['square', 'squiggle', 'oval'];
 const Quantity = ['one', 'two', 'three'];
@@ -15,37 +16,17 @@ const TOTAL_CARDS = Math.pow(NUM_VARIATIONS, NUM_PROPERTIES);
 const GAME_CARDS = 12;
 
 
-function permute(i, choice, permutation, choices, allPermutations) {
-	permutation[i] = choice;
-
-	if (i + 1 >= NUM_PROPERTIES) {
-		allPermutations[allPermutations.length] = permutation;
-		return;
+/*********** Game ***********/
+class Game {
+	constructor() {
+		this.deck = new Deck();
+		this.board = new GameBoard();
+		this.points = 0;
 	}
-
-	choices.forEach((choice) => {
-		const permutationCopy = Array.from(permutation);
-		permute(i + 1, choice, permutationCopy, choices, allPermutations);
-	});
-}
-
-function cominbations(i, choice, combination, choices, allCombinations, len) {
-	combination[i] = choice;
-
-	if (i + 1 >= len) {
-		allCombinations[allCombinations.length] = combination;
-		return;
-	}
-
-	const r = choices.findIndex((c) => c.equals(choice));
-	const reminaingChoices = choices.slice(r + 1);
-	reminaingChoices.forEach((choice) => {
-		const combinationCopy = Array.from(combination);
-		cominbations(i + 1, choice, combinationCopy, reminaingChoices, allCombinations, len);
-	});
 }
 
 
+/*********** Deck ***********/
 class Deck {
 	constructor() {
 		this.cards = [];
@@ -53,6 +34,7 @@ class Deck {
 		this.reset();
 	}
 
+	// Reset the deck to an initial state.
 	reset() {
 		const choices = [];
 		for (let i = 0; i < NUM_VARIATIONS; i++) {
@@ -72,19 +54,114 @@ class Deck {
 		this.cards = _.shuffle(cards);
 	}
 
+	// Draw 'n' cards from the deck.
 	draw(n) {
 		return this.cards.splice(0, n);
 	}
 
+	// Return cards to the deck.
 	returnCards(cards) {
 		this.cards.push(...cards);
 	}
 
+	// Get the number of cards remaining.
 	cardsRemaining() {
 		return this.cards.length;
 	}
 }
 
+
+/*********** GameBoard ***********/
+class GameBoard {
+	constructor() {
+		this.cards = [];
+
+		this.selectedCardIndexes = [];
+
+		this.reset();
+	}
+
+	// Reset the board.
+	reset() {
+		const cards = [];
+		for (let i = 0; i < GAME_CARDS; i++) {
+			cards[i] = null;
+		}
+
+		this.cards = cards;	
+	}
+
+	// Add cards to the board.
+	addCards(newCards) {
+		if (newCards.length > this.cards.filter((card) => card == null).length) {
+			throw new Error('Added too many cards');
+		}
+
+		newCards = Array.from(newCards);
+
+		while (newCards.length) {
+			this.cards.forEach((card, cardIndex) => {
+				if (this.cards[cardIndex] == null && newCards.length) {
+					this.cards[cardIndex] = newCards.shift();
+				}
+			});
+		}
+	}
+
+	// Remove cards from the board.
+	removeCards(cardsToRemove) {
+		this.cards.forEach((card, cardIndex) => {
+			cardsToRemove.forEach((cardToRemove) => {
+				if (card.equals(cardToRemove)) {
+					this.cards[cardIndex] = null;
+				}
+			});
+		});
+	}
+
+	// Set the cards on the board.
+	setCards(cards) {
+		this.cards = Array.from(cards);
+	}
+
+	// Get the board - the cards, including gaps in the board.
+	get() {
+		return this.cards;
+	}
+
+	// Get the cards on the board (same as get(), but with valid cards only).
+	getCards() {
+		return this.get().filter((card) => card != null);
+	}
+
+	// Select a card by its index.
+	selectCard(cardIndex) {
+		// Delsect a card if there are already NUM_VARIATIONS selected.
+		if (this.selectedCardIndexes.length > NUM_VARIATIONS) {
+			this.board.deselectCard(this.selectedCardIndexes[0]);
+			this.selectedCardIndexes.pop();
+		}
+
+		this.cards[cardIndex].isSelected = true;
+		this.selectedCardIndexes.push(cardIndex);
+	}
+
+	// Get all of the selected cards.
+	getSelectedCards() {
+		return this.cards.filter((card) => card.isSelected);
+	}
+
+	// Delselect a card by its index.
+	deselectCard(cardIndex) {
+		this.cards[cardIndex].isSelected = false;
+
+		const i = this.selectedCardIndexes.indexOf(cardIndex);
+		this.selectedCardIndexes.splice(i, 1);
+	}
+}
+
+
+/*********** Card ***********/
 class Card {
 	constructor(properties) {
 		if (properties.length != NUM_PROPERTIES) {
@@ -97,10 +174,10 @@ class Card {
 		});
 
 		this.properties = properties;
-
 		this.isSelected = false;
 	}
 
+	// Get the card's properties.
 	get() {
 		return Array.from(this.properties);
 	}
@@ -109,16 +186,14 @@ class Card {
 		return this.properties.join(',');
 	}
 
+	// Check equality
 	equals(otherCard) {
 		return this.toString() == otherCard.toString();
-	}
-
-	clone() {
-		return new Card(this.properties);
 	}
 }
 
 
+/*********** Game Utility Functions ***********/
 const GameUtil = {
 	isSet(cards) {
 		if (cards.length != NUM_VARIATIONS) {
@@ -167,93 +242,35 @@ const GameUtil = {
 };
 
 
-class GameBoard {
-	constructor() {
-		this.cards = [];
+/*********** Private Helper Functions ***********/
+function permute(i, choice, permutation, choices, allPermutations) {
+	permutation[i] = choice;
 
-		this.selectedCardIndexes = [];
-
-		this.reset();
+	if (i + 1 >= NUM_PROPERTIES) {
+		allPermutations[allPermutations.length] = permutation;
+		return;
 	}
 
-	reset() {
-		const cards = [];
-		for (let i = 0; i < GAME_CARDS; i++) {
-			cards[i] = null;
-		}
-
-		this.cards = cards;	
-	}
-
-	addCards(newCards) {
-		if (newCards.length > this.cards.filter((card) => card == null).length) {
-			throw new Error('Added too many cards');
-		}
-
-		newCards = Array.from(newCards);
-
-		while (newCards.length) {
-			this.cards.forEach((card, cardIndex) => {
-				if (this.cards[cardIndex] == null && newCards.length) {
-					this.cards[cardIndex] = newCards.shift();
-				}
-			});
-		}
-	}
-
-	removeCards(cardsToRemove) {
-		this.cards.forEach((card, cardIndex) => {
-			cardsToRemove.forEach((cardToRemove) => {
-				if (card.equals(cardToRemove)) {
-					this.cards[cardIndex] = null;
-				}
-			});
-		});
-	}
-
-	setCards(cards) {
-		this.cards = Array.from(cards);
-	}
-
-	get() {
-		return this.cards;
-	}
-
-	getCards() {
-		return this.get().filter((card) => card != null);
-	}
-
-	selectCard(cardIndex) {
-		if (this.selectedCardIndexes.length > NUM_VARIATIONS) {
-			this.board.deselectCard(this.selectedCardIndexes[0]);
-			this.selectedCardIndexes.pop();
-		}
-
-		this.board.selectCard(cardIndex);
-		this.selectedCardIndexes.push(cardIndex);
-	}
-
-	getSelectedCards() {
-		return this.cards.filter((card) => card.isSelected);
-	}
-
-	selectCard(cardIndex) {
-		this.cards[cardIndex].isSelected = true;
-	}
-
-	deselectCard(cardIndex) {
-		this.cards[cardIndex].isSelected = false;
-	}
+	choices.forEach((choice) => {
+		const permutationCopy = Array.from(permutation);
+		permute(i + 1, choice, permutationCopy, choices, allPermutations);
+	});
 }
 
+function cominbations(i, choice, combination, choices, allCombinations, len) {
+	combination[i] = choice;
 
-class Game {
-	constructor() {
-		this.deck = new Deck();
-		this.board = new GameBoard();
-
-		this.points = 0;
+	if (i + 1 >= len) {
+		allCombinations[allCombinations.length] = combination;
+		return;
 	}
+
+	const r = choices.findIndex((c) => c.equals(choice));
+	const reminaingChoices = choices.slice(r + 1);
+	reminaingChoices.forEach((choice) => {
+		const combinationCopy = Array.from(combination);
+		cominbations(i + 1, choice, combinationCopy, reminaingChoices, allCombinations, len);
+	});
 }
 
 
