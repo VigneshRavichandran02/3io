@@ -195,6 +195,7 @@ class Card {
 
 /*********** Game Utility Functions ***********/
 const GameUtil = {
+	// Determine whether the given cards form a valid set.
 	isSet(cards) {
 		if (cards.length != NUM_VARIATIONS) {
 			throw new Error('Wrong number of cards.');
@@ -218,6 +219,7 @@ const GameUtil = {
 		return true;
 	},
 
+	// Get all valid sets from the given cards.
 	getSets(cards) {
 		let cardCombinationList = [];
 
@@ -236,6 +238,7 @@ const GameUtil = {
 		return sets;
 	},
 
+	// Determine if the given cards have a valid set.
 	hasSet(cards) {
 		return GameUtil.getSets(cards).length > 0;
 	},
