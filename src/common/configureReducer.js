@@ -7,6 +7,7 @@ import device from './device/reducer';
 import intl from './intl/reducer';
 import themes from './themes/reducer';
 import todos from './todos/reducer';
+import game from './todos/gameReducer';
 import users from './users/reducer';
 import { combineReducers } from 'redux';
 import { fieldsReducer as fields } from './lib/redux-fields';
@@ -42,6 +43,7 @@ const configureReducer = (initialState: Object) => {
     intl,
     themes,
     todos,
+    game,
     users,
   });
 
