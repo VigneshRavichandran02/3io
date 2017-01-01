@@ -141,13 +141,15 @@ class GameBoard {
   // Select a card by its index.
   selectCard(cardIndex) {
     // Delsect a card if there are already NUM_VARIATIONS selected.
+    /*
     if (this.selectedCardIndexes.length > NUM_VARIATIONS) {
       this.board.deselectCard(this.selectedCardIndexes[0]);
       this.selectedCardIndexes.pop();
     }
+   */
 
     this.cards[cardIndex].isSelected = true;
-    this.selectedCardIndexes.push(cardIndex);
+    //this.selectedCardIndexes.push(cardIndex);
   }
 
   // Get all of the selected cards.
@@ -159,8 +161,8 @@ class GameBoard {
   deselectCard(cardIndex) {
     this.cards[cardIndex].isSelected = false;
 
-    const i = this.selectedCardIndexes.indexOf(cardIndex);
-    this.selectedCardIndexes.splice(i, 1);
+    //const i = this.selectedCardIndexes.indexOf(cardIndex);
+    //this.selectedCardIndexes.splice(i, 1);
   }
 }
 

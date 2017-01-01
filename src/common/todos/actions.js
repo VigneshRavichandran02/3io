@@ -83,21 +83,44 @@ export const startGame = (): Action => {
   return {
     type: 'START_GAME',
     payload: {
-      deck: cards
+      board: cards
     },
   };
 };
 
 export const selectCard = (index): Action => {
+  // cheat
+  const sets = GameUtil.getSets(currentGame.board.getCards());
+  console.log('sets', sets);
+
   const cards = currentGame.board.get();
   if (cards[index].isSelected) {
     currentGame.board.deselectCard(index);
   } else {
     currentGame.board.selectCard(index);
   }
+
+  // can't select more than 3 cards
+  const selectedCards = currentGame.board.getSelectedCards();
+  if (selectedCards.length > 3) {
+    currentGame.board.deselectCard(index);
+  }
+  let set = false;
+
+  if (selectedCards.length === 3 && GameUtil.isSet(selectedCards)) {
+    set = true;
+    currentGame.board.removeCards(selectedCards);
+    const newCards = drawWithSet(3);
+    currentGame.board.addCards(newCards);
+  }
+
+  console.log('cards remaining', currentGame.deck.cardsRemaining());
   return {
     type: 'SELECT_CARD',
-    payload: {index},
+    payload: {
+      board: currentGame.board.getCards(),
+      set
+    }
   };
 };
 

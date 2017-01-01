@@ -4,6 +4,7 @@ import R from 'ramda';
 
 const initialState = {
   all: {},
+  set: 0
 };
 
 const reducer = (
@@ -11,9 +12,14 @@ const reducer = (
   action: Action,
 ): TodosState => {
   switch (action.type) {
-    case 'START_GAME': {
-      const deck = action.payload.deck;
-      return { ...state, deck };
+    case 'START_GAME':
+    case 'SELECT_CARD': {
+      const board = action.payload.board;
+      let set = state.set;
+      if (action.payload.set) {
+        set += 1;
+      }
+      return { ...state, board, set };
     }
 
     case 'END_GAME': {
