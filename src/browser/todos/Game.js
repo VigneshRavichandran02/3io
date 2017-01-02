@@ -9,6 +9,8 @@ import { connect } from 'react-redux';
 import { fields } from '../../common/lib/redux-fields';
 import { injectIntl, intlShape } from 'react-intl';
 
+console.log("todo game is getting imported");
+
 const _ = require('underscore');
 
 const CardComponent = ({isSelected, properties, selectCard}) => {
@@ -16,22 +18,24 @@ const CardComponent = ({isSelected, properties, selectCard}) => {
   return <h5 className={className + ' card'} onClick={ selectCard }>{properties}</h5>
 };
 
-const Card = connect(
-  (state, ownProps) => {
-    const card = state.game.board[ownProps.index];
-    return {
-      isSelected: card.isSelected,
-      properties: card.properties
-    };
-  },
-  (dispatch, ownProps) => {
-    return {
-      selectCard: () => {
-        dispatch(selectCard(ownProps.index));
+const createCardContainer = (component) => {
+  return connect(
+    (state, ownProps) => {
+      const card = state.game.board[ownProps.index];
+      return {
+        isSelected: card.isSelected,
+        properties: card.properties
+      };
+    },
+    (dispatch, ownProps) => {
+      return {
+        selectCard: () => {
+          dispatch(selectCard(ownProps.index));
+        }
       }
-    }
-  }
-)(CardComponent);
+    })(component);
+};
+const Card = createCardContainer(CardComponent);
 
 const GameComponent = ({ board, set, startGame, endGame }) => {
   const gameDeck = _.map(board, (card, i) => {
@@ -52,17 +56,20 @@ const GameComponent = ({ board, set, startGame, endGame }) => {
   );
 };
 
-const Game = connect(
-  (state) => {
-    return { board: state.game.board, set: state.game.set };
-  },
-  (dispatch, ownProps) => {
-    return {
-      startGame: () => dispatch(startGame),
-      endGame: () => dispatch(endGame),
-    }
-  }
-)(GameComponent);
+const createGameContainer = (component) => {
+  return connect(
+    (state) => {
+      return { board: state.game.board, set: state.game.set };
+    },
+    (dispatch, ownProps) => {
+      return {
+        startGame: () => dispatch(startGame),
+        endGame: () => dispatch(endGame),
+      }
+    })(component);
+};
+
+const Game = createGameContainer(GameComponent);
 
 /*
 export default R.compose(
@@ -79,5 +86,7 @@ export default R.compose(
 */
 
 export {
-  Game
+  Game,
+  createCardContainer,
+  createGameContainer,
 };

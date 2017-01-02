@@ -11,6 +11,7 @@ import { Match, Redirect } from 'react-router';
 import { Platform, StatusBar } from 'react-native';
 import { appShowMenu } from '../../common/app/actions';
 import { connect } from 'react-redux';
+import { Game } from '../game/Game';
 
 // Pages
 import HomePage from '../home/HomePage';
@@ -24,35 +25,7 @@ const App = ({ appMenuShown, appShowMenu, appStarted }) => {
   // TODO: Add splash screen.
   if (!appStarted) return null;
   return (
-    <Container inverse>
-      {Platform.OS === 'ios' && // Because iOS StatusBar is an overlay.
-        <StatusBar hidden={appMenuShown} />
-      }
-      <SideMenu
-        isOpen={appMenuShown}
-        menu={<Menu />}
-        onChange={appShowMenu}
-      >
-        <Page exactly pattern="/" component={HomePage} />
-        <Page pattern="/intl" component={IntlPage} />
-        <Page pattern="/offline" component={OfflinePage} />
-        <Page pattern="/signin" component={SignInPage} />
-        <Page pattern="/todos" component={TodosPage} />
-        <Page authorized pattern="/me" component={MePage} />
-        {/* Miss does't work in React Native for some reason. */}
-        {/* <Miss render={() => <Redirect to="/" />} /> */}
-        <Match
-          pattern="/"
-          render={({ location: { pathname } }) => {
-            const urls = ['/', '/intl', '/offline', '/signin', '/todos', '/me'];
-            if (urls.indexOf(pathname) !== -1) return null;
-            return (
-              <Redirect to="/" />
-            );
-          }}
-        />
-      </SideMenu>
-    </Container>
+    <Game />
   );
 };
 
